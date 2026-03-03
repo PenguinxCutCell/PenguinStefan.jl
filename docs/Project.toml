@@ -1,0 +1,7 @@
+[deps]
+Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
+LiveServer = "16fef848-5104-11e9-1b77-fb7a48bbb589"
+PenguinStefan = "9e1c32ef-482d-489b-9e61-ca11a025a09c"
+
+[compat]
+Documenter = "1"
