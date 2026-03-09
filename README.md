@@ -2,6 +2,8 @@
 
 [![In development documentation](https://img.shields.io/badge/docs-dev-blue.svg)](https://PenguinxCutCell.github.io/PenguinStefan.jl/dev)
 ![CI](https://github.com/PenguinxCutCell/PenguinStefan.jl/actions/workflows/ci.yml/badge.svg)
+![Coverage](https://codecov.io/gh/PenguinxCutCell/PenguinStefan.jl/branch/main/graph/badge.svg)
+
 
 `PenguinStefan.jl` is a cut-cell Stefan solver package built on `PenguinDiffusion.jl`, `CartesianGeometry.jl`, `CartesianOperators.jl`, and `PenguinSolverCore.jl`.
 

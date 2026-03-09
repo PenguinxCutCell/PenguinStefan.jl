@@ -34,6 +34,10 @@ struct StefanOptions{T,LB,LI,ALG}
     extend_iters::Int
     extend_cfl::T
     interface_band::T
+    coupling_max_iter::Int
+    coupling_tol::T
+    coupling_reltol::T
+    coupling_damping::T
     alg::ALG
 end
 
@@ -47,9 +51,19 @@ function StefanOptions(
     extend_iters::Int=20,
     extend_cfl::Real=0.45,
     interface_band::Real=3.0,
+    coupling_max_iter::Int=20,
+    coupling_tol::Real=1e-10,
+    coupling_reltol::Real=1e-10,
+    coupling_damping::Real=0.5,
     alg=LinearSolve.KLUFactorization(),
 )
-    T = promote_type(typeof(float(extend_cfl)), typeof(float(interface_band)))
+    T = promote_type(
+        typeof(float(extend_cfl)),
+        typeof(float(interface_band)),
+        typeof(float(coupling_tol)),
+        typeof(float(coupling_reltol)),
+        typeof(float(coupling_damping)),
+    )
     if !(scheme === :BE || scheme === :CN)
         throw(ArgumentError("scheme must be :BE or :CN"))
     end
@@ -62,6 +76,10 @@ function StefanOptions(
         extend_iters,
         convert(T, extend_cfl),
         convert(T, interface_band),
+        coupling_max_iter,
+        convert(T, coupling_tol),
+        convert(T, coupling_reltol),
+        convert(T, coupling_damping),
         alg,
     )
 end

@@ -45,6 +45,14 @@ function step!(
     cache = solver.cache
     rep = prob.interface_rep
 
+    mode = coupling_mode(rep)
+    if mode !== :explicit
+        if mode === :ghf_newton
+            return coupled_step!(solver, dt; method=method, kwargs...)
+        end
+        throw(ArgumentError("unsupported coupling_mode `$mode` for $(typeof(rep))"))
+    end
+
     t = state.t
     phi_n = phi_values(rep)
     phi_np1_pred = predict_phi(rep, state.speed_full, t, dt)

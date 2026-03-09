@@ -6,6 +6,7 @@ version = "0.1.0"
 CartesianGeometry = "5961ddb3-e46d-41f1-806c-0197ba873d0b"
 CartesianGrids = "c0ffee00-c0ff-e000-c0ff-ee000c0ffee0"
 CartesianOperators = "6ffd2c7a-1a34-4f8b-a2c9-3d5e7f9b0c1d"
+GlobalHeightFunctions = "e77610ac-09b5-412d-9ed5-90f4e356aae1"
 LevelSetMethods = "ca3df947-0575-4ae6-b9a3-78df393a7451"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 LinearSolve = "7ed4a6bd-45f5-4d41-b270-4a48e9bafcae"
@@ -18,6 +19,7 @@ SpecialFunctions = "276daf66-3868-5448-9aa4-cd146d93841b"
 StaticArrays = "90137ffa-7385-5640-81b9-e52037218182"
 
 [compat]
+GlobalHeightFunctions = "0.1"
 LevelSetMethods = "0.1.6"
 LinearAlgebra = "1.11.0"
 LinearSolve = "3.62.0"
@@ -25,6 +27,9 @@ SparseArrays = "1.11.0"
 SpecialFunctions = "2.7.1"
 StaticArrays = "1.9.17"
 julia = "1"
+
+[sources]
+GlobalHeightFunctions = {path = "../GlobalHeightFunctions.jl"}
 
 [extras]
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
