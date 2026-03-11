@@ -227,6 +227,7 @@ function assemble_moving_diffusion_mono!(
     cache::MonoMovingDiffusionCache{N,T},
     phi_n,
     phi_np1,
+    speed_full_prev,
     uω_prev::AbstractVector{T},
     uγ_prev::AbstractVector{T},
     t::T,
@@ -234,6 +235,15 @@ function assemble_moving_diffusion_mono!(
     prob::StefanMonoProblem{N,T},
 ) where {N,T}
     update_slab_field!(cache.slab, phi_n, phi_np1, t, t + dt)
+
+    if !(prob.params.thermo_bc === nothing) && !(prob.params.thermo_bc isa GibbsThomson)
+        throw(ArgumentError("thermo_bc must be nothing or PenguinBCs.GibbsThomson"))
+    end
+    if prob.params.thermo_bc isa GibbsThomson
+        trace_cb = _mono_interface_trace_callback(prob, phi_np1, speed_full_prev, t + dt)
+        cache.model.bc_interface = PenguinBCs.Robin(1.0, 0.0, trace_cb)
+    end
+
     uprev = _as_prev_full_mono(cache.model, uω_prev, uγ_prev)
     PenguinDiffusion.assemble_unsteady_mono_moving!(
         cache.sys,
@@ -250,6 +260,7 @@ function solve_moving_diffusion_mono!(
     cache::MonoMovingDiffusionCache{N,T},
     phi_n,
     phi_np1,
+    speed_full_prev,
     uω_prev::AbstractVector{T},
     uγ_prev::AbstractVector{T},
     t::T,
@@ -259,7 +270,7 @@ function solve_moving_diffusion_mono!(
     method::Symbol=:direct,
     kwargs...,
 ) where {N,T}
-    sys, uprev = assemble_moving_diffusion_mono!(cache, phi_n, phi_np1, uω_prev, uγ_prev, t, dt, prob)
+    sys, uprev = assemble_moving_diffusion_mono!(cache, phi_n, phi_np1, speed_full_prev, uω_prev, uγ_prev, t, dt, prob)
     solve!(sys; method=method, reuse_factorization=false, kwargs...)
     lay = cache.model.layout.offsets
     uω_new = Vector{T}(sys.x[lay.ω])

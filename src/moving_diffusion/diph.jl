@@ -51,19 +51,11 @@ function _as_prev_full_diph(
     return u
 end
 
-function _tm_values(cap::AssembledCapacity{N,T}, tm, t::T) where {N,T}
-    g = zeros(T, cap.ntotal)
-    @inbounds for i in eachindex(g)
-        x = cap.C_γ[i]
-        g[i] = convert(T, eval_bc(tm, x, t))
-    end
-    return g
-end
-
 function assemble_moving_diffusion_diph_stefan!(
     cache::DiphMovingDiffusionCache{N,T},
     phi_n,
     phi_np1,
+    speed_full_prev,
     uω1_prev::AbstractVector{T},
     uγ1_prev::AbstractVector{T},
     uω2_prev::AbstractVector{T},
@@ -141,10 +133,10 @@ function assemble_moving_diffusion_diph_stefan!(
     bω2 .-= (one(T) - θ) .* ((C2 * Ψ2m) * uγ2)
     bω2 .+= θ .* (cap2.V * f2_n1) .+ (one(T) - θ) .* (cap2.V * f2_n)
 
-    tm1 = _tm_values(cap1, prob.params.Tm, t + dt)
-    tm2 = _tm_values(cap2, prob.params.Tm, t + dt)
-    bγ1 = IΓ1 * tm1
-    bγ2 = IΓ2 * tm2
+    tg1 = _gibbs_thomson_trace_values(prob, phi_np1, speed_full_prev, cap1.C_γ, t + dt)
+    tg2 = _gibbs_thomson_trace_values(prob, phi_np1, speed_full_prev, cap2.C_γ, t + dt)
+    bγ1 = IΓ1 * tg1
+    bγ2 = IΓ2 * tg2
 
     A, b = if PenguinDiffusion._is_canonical_diph_layout(lay, nt)
         (
@@ -197,6 +189,7 @@ function solve_moving_diffusion_diph_stefan!(
     cache::DiphMovingDiffusionCache{N,T},
     phi_n,
     phi_np1,
+    speed_full_prev,
     uω1_prev::AbstractVector{T},
     uγ1_prev::AbstractVector{T},
     uω2_prev::AbstractVector{T},
@@ -211,6 +204,7 @@ function solve_moving_diffusion_diph_stefan!(
         cache,
         phi_n,
         phi_np1,
+        speed_full_prev,
         uω1_prev,
         uγ1_prev,
         uω2_prev,

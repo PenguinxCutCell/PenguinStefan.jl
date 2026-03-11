@@ -1,10 +1,11 @@
-struct StefanParams{T,K1,K2,S1,S2}
+struct StefanParams{T,K1,K2,S1,S2,TB}
     Tm::T
     rhoL::T
     kappa1::K1
     kappa2::K2
     source1::S1
     source2::S2
+    thermo_bc::TB
 end
 
 function StefanParams(
@@ -14,14 +15,18 @@ function StefanParams(
     kappa2=one(T),
     source1=((args...) -> zero(T)),
     source2=((args...) -> zero(T)),
+    thermo_bc=nothing,
 ) where {T<:Real}
-    return StefanParams{T,typeof(kappa1),typeof(kappa2),typeof(source1),typeof(source2)}(
+    return StefanParams{
+        T,typeof(kappa1),typeof(kappa2),typeof(source1),typeof(source2),typeof(thermo_bc)
+    }(
         Tm,
         rhoL,
         kappa1,
         kappa2,
         source1,
         source2,
+        thermo_bc,
     )
 end
 

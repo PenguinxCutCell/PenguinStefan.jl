@@ -100,6 +100,7 @@ function step!(
         cache,
         phi_n,
         phi_np1_pred,
+        state.speed_full,
         state.uω,
         state.uγ,
         t,
