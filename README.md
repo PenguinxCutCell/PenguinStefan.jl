@@ -37,6 +37,8 @@ julia --project=. examples/diph_1d_stationary.jl
 julia --project=. examples/mono_2d_circle_gibbs_thomson_equilibrium.jl
 julia --project=. examples/mono_2d_perturbed_crystal_shrink_gibbs_thomson.jl
 julia --project=. examples/smoke_small_grid_gibbs_thomson.jl
+julia --project=. examples/ghf_mono_1d_solidifying_planar_translation.jl
+julia --project=. examples/ghf_diph_1d_favier_testcase.jl
 ```
 
 ## Gibbs-Thomson Notes
