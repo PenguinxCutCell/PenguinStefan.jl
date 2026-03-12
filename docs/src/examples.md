@@ -1,4 +1,4 @@
-**Examples**
+# Examples
 
 Run from repository root:
 

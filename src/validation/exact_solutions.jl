@@ -65,15 +65,6 @@ function manufactured_planar_1d(
     return (T=Tex, s=s, source=source, flux=flux, vflux=vflux)
 end
 
-"""
-    frank_disk_exact(r, t; s0, Tinf=1, Tm=0)
-
-Frank's 2D similarity solution for an exterior one-phase disk benchmark.
-
-Returns `(T, R, Vn)` where `Vn = dR/dt` is the **radial outward** speed.
-When used with a level set `phi = R - r`, the signed normal speed for
-`advance!` is `-Vn`.
-"""
 function frank_disk_exact(
     r::T,
     t::T;

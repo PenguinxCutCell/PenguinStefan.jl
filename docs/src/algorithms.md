@@ -1,4 +1,4 @@
-**Numerical Algorithms & Routines**
+# Numerical Algorithms & Routines
 
 This page summarizes the high-level routines used in a typical time step.
 

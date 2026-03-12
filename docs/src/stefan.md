@@ -1,12 +1,12 @@
-**Theory and PDE**
+# Theory and PDE
 
 `PenguinStefan.jl` advances one-phase and two-phase Stefan problems on Cartesian cut-cell meshes. The solver couples heat diffusion with interface motion.
 
 For each phase, temperature obeys a diffusion equation
 
-$$
+```math
 \partial_t T = \nabla \cdot (D \nabla T) + s,
-$$
+```
 
 with boundary/interface conditions provided through `PenguinBCs.jl` and the cut-cell operators from `CartesianGeometry.jl` and `CartesianOperators.jl`.
 
