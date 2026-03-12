@@ -1,18 +1,25 @@
-# Todo
+# TODO
 
-- [ ] Add crystal level set with the split algorithm (interface update then temperature update)
-- [ ] Add Front Tracking algorithm
-- [ ] Add the inner iteration newton residual solve
+## Backlog
 
-4 types of interface representation:
-- Level set (current implementation)
-- Front tracking (explicitly track the interface with marker points)
-- VOF
-- Height Function
+- [x] Isotropic Gibbs-Thomson thermodynamics in Stefan (`GibbsThomson` with curvature + kinetic terms).
+- [x] Explicit `C_γ` sampling path for Gibbs-Thomson (`phi_np1_pred` curvature + lagged `speed_full` kinetic term).
+- [x] Mesh/time convergence smoke script for LevelSet and GlobalHF.
+- [ ] Front Tracking interface representation.
+- [ ] VOF interface representation.
+- [ ] LevelSet nonlinear inner-iteration (Newton/fixed-point) coupling.
+- [ ] Gibbs-Thomson anisotropy (surface tension / kinetic anisotropy).
 
-| Interface Representation | Classical Split Algorithm | Inner Iteration Newton Residual Solve |
-|---| --- | --- |
-| Level Set | Implemented | Check if possible |
-| Front Tracking | Planned | Planned |
-| VOF | Planned | Planned |
-| Height Function | Planned | Planned |
+
+## Status Matrix
+
+| Area | Item | Status | Notes |
+|---|---|---|---|
+| Interface | LevelSet representation | Implemented | Explicit split stepping operational. |
+| Interface | Global height function representation | Partial | Newton coupling implemented for graph-like interfaces; broader robustness still in progress. |
+| Interface | Front Tracking representation | Missing | Planned roadmap item. |
+| Interface | VOF representation | Missing | Planned roadmap item. |
+| Coupling | GlobalHF Newton inner iteration | Implemented | Covered by existing tests and examples. |
+| Coupling | LevelSet nonlinear inner iteration | Missing | Current LevelSet path is explicit only. |
+| Thermodynamics | Isotropic Gibbs-Thomson | Implemented | Curvature + kinetic with `C_γ` sampling. |
+| Thermodynamics | Anisotropic Gibbs-Thomson | Missing | Not in current implementation. |

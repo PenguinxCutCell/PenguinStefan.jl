@@ -70,7 +70,7 @@ function assemble_moving_diffusion_diph_stefan!(
     uprev = _as_prev_full_diph(cache.model, uω1_prev, uγ1_prev, uω2_prev, uγ2_prev)
 
     θ = PenguinDiffusion._theta_from_scheme(T, prob.options.scheme)
-    psip, psim = PenguinDiffusion._psi_functions(prob.options.scheme)
+    psip, psim = PenguinDiffusion._psi_functions(T, θ)
 
     PenguinDiffusion._build_moving_slab!(cache.model, t, dt)
     cap1 = something(cache.model.cap1_slab)

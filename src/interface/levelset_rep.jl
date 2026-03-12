@@ -290,6 +290,51 @@ function _extend_velocity_normal_2d!(F::AbstractMatrix{T}, ϕ::AbstractMatrix{T}
     return F
 end
 
+function _seed_opposite_interface_side!(
+    v_nodes::AbstractArray{T,N},
+    frozen_src::BitArray{N},
+    ϕ::AbstractArray{T,N},
+) where {N,T}
+    frozen_ext = copy(frozen_src)
+    any(frozen_src) || return frozen_ext
+    acc = zeros(T, size(v_nodes))
+    cnt = zeros(Int, size(v_nodes))
+
+    @inbounds for I in CartesianIndices(frozen_src)
+        frozen_src[I] || continue
+        ϕI = ϕ[I]
+        vI = v_nodes[I]
+        for d in 1:N
+            off = ntuple(k -> (k == d ? 1 : 0), N)
+            Jp = I + CartesianIndex(off)
+            if checkbounds(Bool, frozen_src, Jp)
+                ϕJ = ϕ[Jp]
+                if !frozen_src[Jp] && ((ϕI <= zero(T) && ϕJ >= zero(T)) || (ϕI >= zero(T) && ϕJ <= zero(T)))
+                    acc[Jp] += vI
+                    cnt[Jp] += 1
+                end
+            end
+            Jm = I - CartesianIndex(off)
+            if checkbounds(Bool, frozen_src, Jm)
+                ϕJ = ϕ[Jm]
+                if !frozen_src[Jm] && ((ϕI <= zero(T) && ϕJ >= zero(T)) || (ϕI >= zero(T) && ϕJ <= zero(T)))
+                    acc[Jm] += vI
+                    cnt[Jm] += 1
+                end
+            end
+        end
+    end
+
+    @inbounds for I in CartesianIndices(frozen_src)
+        c = cnt[I]
+        if c > 0
+            v_nodes[I] = acc[I] / c
+            frozen_ext[I] = true
+        end
+    end
+    return frozen_ext
+end
+
 function extend_speed!(
     rep::LevelSetRep,
     v_nodes;
@@ -303,11 +348,17 @@ function extend_speed!(
         return _extend_speed_nearest_1d!(v_nodes, vec(frozen))
     end
 
+    frozen_use = frozen
+    if !(frozen === nothing) && ndims(v_nodes) >= 2
+        ϕ = values(rep.levelset)
+        frozen_use = _seed_opposite_interface_side!(v_nodes, frozen, ϕ)
+    end
+
     try
         LevelSetMethods.extend_along_normals!(
             v_nodes,
             rep.levelset;
-            frozen=frozen,
+            frozen=frozen_use,
             nb_iters=nb_iters,
             cfl=cfl,
             interface_band=interface_band,
@@ -318,9 +369,9 @@ function extend_speed!(
         Δ = minimum(LevelSetMethods.meshsize(rep.ls_grid))
         ϕ = values(rep.levelset)
         if ndims(v_nodes) == 1
-            _extend_velocity_normal_1d!(v_nodes, ϕ, Δ; nb_iters=nb_iters, frozen=frozen)
+            _extend_velocity_normal_1d!(v_nodes, ϕ, Δ; nb_iters=nb_iters, frozen=frozen_use)
         elseif ndims(v_nodes) == 2
-            _extend_velocity_normal_2d!(v_nodes, ϕ, Δ; nb_iters=nb_iters, frozen=frozen)
+            _extend_velocity_normal_2d!(v_nodes, ϕ, Δ; nb_iters=nb_iters, frozen=frozen_use)
         else
             throw(ArgumentError("fallback normal extension supports 1D/2D only"))
         end

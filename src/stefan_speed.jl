@@ -1,5 +1,6 @@
 function _psi_vectors(Vn::AbstractVector{T}, Vn1::AbstractVector{T}, scheme) where {T}
-    psip, psim = PenguinDiffusion._psi_functions(scheme)
+    θ = PenguinDiffusion._theta_from_scheme(T, scheme)
+    psip, psim = PenguinDiffusion._psi_functions(T, θ)
     ψp = Vector{T}(undef, length(Vn))
     ψm = Vector{T}(undef, length(Vn))
     @inbounds for i in eachindex(Vn)
@@ -91,13 +92,36 @@ function stefan_speed_mono!(
     fill!(vflat, zero(T))
     fill!(fflat, false)
 
+    rhoL_T = convert(T, rhoL)
     has_interface = false
-    @inbounds for i in eachindex(vflat)
-        γ = Γ[i]
-        if isfinite(γ) && γ > tol
-            vflat[i] = -flux[i] / (convert(T, rhoL) * γ)
-            fflat[i] = true
-            has_interface = true
+    if N == 1
+        # In 1D, use the integrated interface flux to recover a single front speed.
+        flux_sum = zero(T)
+        @inbounds for i in eachindex(vflat)
+            γ = Γ[i]
+            if isfinite(γ) && γ > tol
+                flux_sum += flux[i]
+                has_interface = true
+            end
+        end
+        if has_interface
+            v_if = -flux_sum / (rhoL_T * dt)
+            @inbounds for i in eachindex(vflat)
+                γ = Γ[i]
+                if isfinite(γ) && γ > tol
+                    vflat[i] = v_if
+                    fflat[i] = true
+                end
+            end
+        end
+    else
+        @inbounds for i in eachindex(vflat)
+            γ = Γ[i]
+            if isfinite(γ) && γ > tol
+                vflat[i] = -flux[i] / (rhoL_T * γ)
+                fflat[i] = true
+                has_interface = true
+            end
         end
     end
 
@@ -154,14 +178,36 @@ function stefan_speed_diph!(
     fill!(vflat, zero(T))
     fill!(fflat, false)
 
+    rhoL_T = convert(T, rhoL)
     has_interface = false
-    @inbounds for i in eachindex(vflat)
-        γ = Γ[i]
-        if isfinite(γ) && γ > tol
-            # Phase operators use opposite interface normals; physical jump is flux1 + flux2.
-            vflat[i] = -(flux1[i] + flux2[i]) / (convert(T, rhoL) * γ)
-            fflat[i] = true
-            has_interface = true
+    if N == 1
+        flux_sum = zero(T)
+        @inbounds for i in eachindex(vflat)
+            γ = Γ[i]
+            if isfinite(γ) && γ > tol
+                flux_sum += flux1[i] + flux2[i]
+                has_interface = true
+            end
+        end
+        if has_interface
+            v_if = -flux_sum / (rhoL_T * dt)
+            @inbounds for i in eachindex(vflat)
+                γ = Γ[i]
+                if isfinite(γ) && γ > tol
+                    vflat[i] = v_if
+                    fflat[i] = true
+                end
+            end
+        end
+    else
+        @inbounds for i in eachindex(vflat)
+            γ = Γ[i]
+            if isfinite(γ) && γ > tol
+                # Phase operators use opposite interface normals; physical jump is flux1 + flux2.
+                vflat[i] = -(flux1[i] + flux2[i]) / (rhoL_T * γ)
+                fflat[i] = true
+                has_interface = true
+            end
         end
     end
 

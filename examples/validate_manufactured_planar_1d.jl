@@ -11,7 +11,7 @@ rhoL = kappa * A / V
 
 t0 = 0.0
 tf = 0.08
-levels = [129, 257, 513]
+levels = [17, 33, 65, 129, 257, 513]
 
 function interface_position_from_phi(rep::LevelSetRep)
     ϕ = PenguinStefan.phi_values(rep)
@@ -38,7 +38,7 @@ function run_case(n)
 
     source1(x, t) = A * V
     params = StefanParams(Tm, rhoL; kappa1=kappa, source1=source1)
-    opts = StefanOptions(; scheme=:CN, reinit=true, reinit_every=4, extend_iters=10)
+    opts = StefanOptions(; scheme=:CN, reinit=true, reinit_every=1, extend_iters=50)
     prob = StefanMonoProblem(grid, bc, params, rep, opts)
 
     Texact(x, t) = manufactured_planar_1d(x, t; s0=s0, V=V, Tm=Tm, A=A, kappa=kappa, rhoL=rhoL).T
@@ -46,58 +46,27 @@ function run_case(n)
 
     h = 1 / (n - 1)
     out = solve!(solver, (t0, tf); dt=0.25 * h, save_history=false)
-
-    cap = out.solver.cache.model.cap_slab
-    xs = [cap.C_ω[i][1] for i in 1:cap.ntotal]
-    ws = copy(out.solver.cache.model.Vn1)
-    us = copy(out.state.uω)
     s_num = interface_position_from_phi(rep)
 
-    return (n=n, h=h, x=xs, w=ws, u=us, s=s_num)
+    cap = out.solver.cache.model.cap_slab
+    terr = temperature_error_norms(out.state.uω, (x, t) -> Texact(x, t), cap, tf)
+    s_err = abs(s_num - (s0 + V * tf))
+    return (n=n, h=h, errT=terr.L2, errs=s_err)
 end
 
 results = map(run_case, levels)
-ref = results[end]
-
-function interp1(xnodes::AbstractVector{T}, vals::AbstractVector{T}, x::T) where {T}
-    if x <= xnodes[1]
-        return vals[1]
-    elseif x >= xnodes[end]
-        return vals[end]
-    end
-    i = clamp(searchsortedlast(xnodes, x), 1, length(xnodes) - 1)
-    x0 = xnodes[i]
-    x1 = xnodes[i + 1]
-    θ = (x - x0) / (x1 - x0)
-    return (1 - θ) * vals[i] + θ * vals[i + 1]
-end
-
-errs_T = Float64[]
-errs_s = Float64[]
-hs = Float64[]
-
-for r in results[1:(end - 1)]
-    e2 = 0.0
-    for i in eachindex(r.x)
-        wi = r.w[i]
-        if isfinite(wi) && wi > 0
-            d = r.u[i] - interp1(ref.x, ref.u, r.x[i])
-            e2 += wi * d^2
-        end
-    end
-    push!(errs_T, sqrt(e2))
-    push!(errs_s, abs(r.s - ref.s))
-    push!(hs, r.h)
-end
+hs = [r.h for r in results]
+errs_T = [r.errT for r in results]
+errs_s = [r.errs for r in results]
 
 ordT = fit_order(hs, errs_T)
 ords = fit_order(hs, errs_s)
 
-println("Manufactured planar 1D convergence (against finest-grid reference)")
-println("n\th\tL2(T-Tref)\t|s-sref|")
-for (k, r) in enumerate(results[1:(end - 1)])
-    println("$(r.n)\t$(r.h)\t$(errs_T[k])\t$(errs_s[k])")
+println("Manufactured planar 1D convergence (analytical at final-time C_ω)")
+println("n\th\tL2(T-Texact)\t|s-s_exact|")
+for r in results
+    println("$(r.n)\t$(r.h)\t$(r.errT)\t$(r.errs)")
 end
 println("order L2(T): pairwise=$(ordT.pairwise), global=$(ordT.order_global)")
 println("order interface: pairwise=$(ords.pairwise), global=$(ords.order_global)")
-println("target: temperature > 1, interface ~ 1")
+println("note: this script now uses analytical-at-C_ω errors (stricter than finest-grid-reference comparison)")
